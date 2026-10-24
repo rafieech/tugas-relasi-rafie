@@ -8,22 +8,33 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('beritas', function (Blueprint $table) {
-            $table->id();
-            $table->string('judul');
-            $table->string('slug')->unique();
-            $table->string('kategori');
-            $table->string('gambar')->nullable();
-            $table->longText('isi');
-            $table->string('tags')->nullable();
-            $table->string('penulis')->default('Admin');
-            $table->unsignedInteger('dilihat')->default(0);
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('role')->default('editor')->after('email');
+        });
+
+        // Hapus kolom penulis (teks) jika masih ada
+        if (Schema::hasColumn('beritas', 'penulis')) {
+            Schema::table('beritas', function (Blueprint $table) {
+                $table->dropColumn('penulis');
+            });
+        }
+
+        Schema::table('beritas', function (Blueprint $table) {
+            // nullable karena tabel beritas sudah berisi data lama
+            $table->foreignId('user_id')->nullable()->after('kategori_id')
+                ->constrained('users');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('beritas');
+        Schema::table('beritas', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('user_id');
+            $table->string('penulis')->default('Admin');
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('role');
+        });
     }
 };

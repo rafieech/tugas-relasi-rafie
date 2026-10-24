@@ -6,8 +6,8 @@
 @section('subjudul', 'Desa Jalatrang')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('berita.index') }}" class="text-success text-decoration-none">Berita</a></li>
-    <li class="breadcrumb-item active">Detail</li>
+<li class="breadcrumb-item"><a href="{{ route('berita.index') }}" class="text-success text-decoration-none">Berita</a></li>
+<li class="breadcrumb-item active">Detail</li>
 @endsection
 
 @section('content')
@@ -15,11 +15,10 @@
 <div class="row">
     <div class="col-lg-8">
         <article class="bg-white rounded shadow-sm overflow-hidden mb-4">
-            <img src="{{ $berita->gambar_url }}" class="w-100" style="max-height:420px;object-fit:cover" alt="{{ $berita->judul }}"
-                 onerror="this.src='https://placehold.co/800x400?text=Berita+Desa'">
+            <img src="{{ asset('storage/' . $berita->gambar) }}" class="w-100" style="max-height:420px;object-fit:cover" alt="{{ $berita->judul }}" onerror="this.src='https://placehold.co/800x400?text=Berita+Desa'">
             <div class="p-4">
                 <div class="d-flex flex-wrap align-items-center gap-2 small text-muted mb-2">
-                    <span class="badge badge-kat">{{ $berita->kategori }}</span>
+                    <span class="badge badge-kategori text-white">{{ $berita->kategori->nama }}</span>
                     <span><i class="bi bi-calendar3"></i> {{ $berita->created_at->translatedFormat('l, d F Y') }}</span>
                     <span><i class="bi bi-person"></i> {{ $berita->penulis }}</span>
                     <span><i class="bi bi-eye"></i> {{ number_format($berita->dilihat) }} dibaca</span>
@@ -27,12 +26,13 @@
                 <h1 class="h3 fw-bold judul-halaman">{{ $berita->judul }}</h1>
                 <div class="isi-berita">{!! $berita->isi_html !!}</div>
 
-                <div class="mt-3">
-                    <strong class="small">Tags:</strong>
-                    @foreach ($berita->tag_list as $t)
-                        <a href="{{ route('berita.index', ['kata_kunci' => $t]) }}" class="tag-pill">#{{ $t }}</a>
+                <div class="mb-3">
+                    @foreach ($berita->tags as $tag)
+                    <a href="{{ route('berita.index', ['tag' => $tag->id]) }}"
+                        class="tag-pill text-decoration-none">#{{ $tag->nama }}</a>
                     @endforeach
                 </div>
+
                 <div class="mt-3 pt-3 border-top d-flex flex-wrap align-items-center gap-2">
                     <strong class="small">Bagikan:</strong>
                     <a class="btn btn-sm btn-primary" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u={{ $url }}"><i class="bi bi-facebook"></i> Facebook</a>
@@ -92,12 +92,12 @@
             </form>
             <hr>
             @forelse ($komentars as $k)
-                <div class="mb-3">
-                    <strong>{{ $k->nama }}</strong> <small class="text-muted">{{ $k->created_at->diffForHumans() }}</small>
-                    <p class="mb-0">{{ $k->pesan }}</p>
-                </div>
+            <div class="mb-3">
+                <strong>{{ $k->nama }}</strong> <small class="text-muted">{{ $k->created_at->diffForHumans() }}</small>
+                <p class="mb-0">{{ $k->pesan }}</p>
+            </div>
             @empty
-                <p class="text-muted text-center mb-0">Belum ada komentar. Jadilah yang pertama memberikan masukan!</p>
+            <p class="text-muted text-center mb-0">Belum ada komentar. Jadilah yang pertama memberikan masukan!</p>
             @endforelse
         </section>
 
@@ -109,14 +109,15 @@
             <div class="filter-header">Berita Terkait</div>
             <div class="p-3">
                 @forelse ($terkait as $t)
-                    <a href="{{ route('berita.show', $t) }}" class="d-flex gap-2 mb-3 text-decoration-none text-dark">
-                        <img src="{{ $t->gambar_url }}" width="90" height="65" style="object-fit:cover;border-radius:6px" alt=""
-                             onerror="this.src='https://placehold.co/90x65'">
-                        <div><div class="small fw-semibold">{{ Str::limit($t->judul, 65) }}</div>
-                            <small class="text-muted">{{ $t->created_at->translatedFormat('d M Y') }}</small></div>
-                    </a>
+                <a href="{{ route('berita.show', $t) }}" class="d-flex gap-2 mb-3 text-decoration-none text-dark">
+                    <img src="{{ asset('storage/' . $t->gambar) }}" width="90" height="65" style="object-fit:cover;border-radius:6px" alt="" onerror="this.src='https://placehold.co/90x65'">
+                    <div>
+                        <div class="small fw-semibold">{{ Str::limit($t->judul, 65) }}</div>
+                        <small class="text-muted">{{ $t->created_at->translatedFormat('d M Y') }}</small>
+                    </div>
+                </a>
                 @empty
-                    <p class="text-muted small mb-0">Belum ada berita terkait.</p>
+                <p class="text-muted small mb-0">Belum ada berita terkait.</p>
                 @endforelse
             </div>
         </div>
@@ -126,8 +127,10 @@
 
 @push('scripts')
 <script>
-    const p = document.getElementById('pesan'), s = document.getElementById('sisa');
+    const p = document.getElementById('pesan'),
+        s = document.getElementById('sisa');
     const hitung = () => s.textContent = 300 - p.value.length;
-    p.addEventListener('input', hitung); hitung();
+    p.addEventListener('input', hitung);
+    hitung();
 </script>
 @endpush
